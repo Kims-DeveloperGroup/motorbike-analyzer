@@ -1,0 +1,13 @@
+naver:
+    userId: CREDENTIAL
+    password: CREDENTIAL
+elasticsearch:
+  host: 127.0.0.1
+  port: 9300
+  clustername: elasticsearch_rikim
+---
+spring:
+  profiles: local
+---
+spring:
+  profiles: test

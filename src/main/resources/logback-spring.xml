@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d [%thread] %-5level %logger{35} - %msg %n</pattern>
+        </encoder>
+    </appender>
+    <appender name="dailyRollingFileAppender"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>/Users/rikim/PersonalProject/motorbike-analyzer/log/motor-analyzer.log</file>
+        <!-- daily rollover -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>/Users/rikim/PersonalProject/motorbike-analyzer/log/motor-analyzer-%d{yyyy-MM-dd}.log.gz
+            </fileNamePattern>
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d [%thread] %-5level %logger{35} - %msg %n
+            </pattern>
+        </encoder>
+    </appender>
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="dailyRollingFileAppender"/>
+            <appender-ref ref="stdout"/>
+        </root>
+        <logger name="com.devoo.motorbike.analyzer" level="DEBUG"/>
+    </springProfile>
+
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="stdout"/>
+        </root>
+        <logger name="com.devoo.motorbike.analyzer" level="DEBUG"/>
+    </springProfile>
+
+</configuration>

@@ -16,7 +16,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 @Configuration
-@EnableElasticsearchRepositories(basePackages = {"com.devoo.motorbike.analyzer.repository.paxxo", "com.devoo.motorbike.analyzer.repository.naver"})
+@EnableElasticsearchRepositories(
+        basePackages = {"com.devoo.motorbike.analyzer.repository",
+                "com.devoo.motorbike.analyzer.repository.paxxo",
+                "com.devoo.motorbike.analyzer.repository.naver"})
 public class ElasticSearchConfig {
 
     @Value("${elasticsearch.host}")

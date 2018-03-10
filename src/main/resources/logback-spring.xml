@@ -22,6 +22,11 @@
             </pattern>
         </encoder>
     </appender>
+    <root level="INFO">
+        <appender-ref ref="dailyRollingFileAppender"/>
+        <appender-ref ref="stdout"/>
+    </root>
+    <logger name="com.devoo.motorbike.analyzer" level="DEBUG"/>
     <springProfile name="local">
         <root level="INFO">
             <appender-ref ref="dailyRollingFileAppender"/>

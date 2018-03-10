@@ -1,6 +1,7 @@
 package com.devoo.motorbike.analyzer.repository.naver;
 
 import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @Repository
+@Slf4j
 public class AsyncNaverItemRepository {
 
     private final NaverItemRepository naverItemRepository;
@@ -22,15 +24,24 @@ public class AsyncNaverItemRepository {
     }
 
     public Flux<NaverItem> findAll() {
-        Pageable pageable = PageRequest.of(0, PAGE_SIZE);
+        final Pageable[] pageable = {PageRequest.of(0, PAGE_SIZE)};
         return Flux.fromStream((() -> Stream.generate(() -> {
-            List<NaverItem> items = findAllByPagination(pageable);
-            pageable.next();
+            log.debug("Reading crawling target item from page {}", pageable[0].getPageNumber());
+            List<NaverItem> items = findAllByPagination(pageable[0]);
+            pageable[0] = pageable[0].next();
+            delayTime(1000L);
             return items;
         }))).flatMap(Flux::fromIterable);
     }
 
     private List<NaverItem> findAllByPagination(Pageable pageable) {
         return naverItemRepository.findAll(pageable).getContent();
+    }
+
+    private void delayTime(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+        }
     }
 }

@@ -1,6 +1,6 @@
 package com.devoo.motorbike.analyzer.service;
 
-import com.devoo.motorbike.analyzer.crawler.NaverItemCrawler;
+import com.devoo.motorbike.analyzer.crawler.NaverCafeItemCrawler;
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.SaleItem;
 import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
@@ -27,7 +27,7 @@ public class NaverItemAnalysisServiceTest {
     private AsyncNaverItemRepository asyncNaverItemRepository;
 
     @Mock
-    private NaverItemCrawler naverItemCrawler;
+    private NaverCafeItemCrawler naverCafeItemCrawler;
 
     @Mock
     private NaverDocumentProcessor naverDocumentProcessor;
@@ -41,7 +41,7 @@ public class NaverItemAnalysisServiceTest {
         //Given
         NaverItem[] items = new NaverItem[]{new NaverItem(), new NaverItem()};
         when(asyncNaverItemRepository.findAll()).thenReturn(Flux.fromArray(items));
-        when(naverItemCrawler.getDocument(any(NaverItem.class)))
+        when(naverCafeItemCrawler.getDocument(any(NaverItem.class)))
                 .thenReturn(new NaverDocumentWrapper(null));
         when(naverDocumentProcessor.process(any(NaverDocumentWrapper.class)))
                 .thenReturn(new SaleItem());

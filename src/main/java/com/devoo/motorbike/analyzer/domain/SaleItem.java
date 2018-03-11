@@ -4,6 +4,8 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 
+import java.time.LocalDate;
+
 @Document(indexName = "sale-item")
 @Data
 public class SaleItem {
@@ -17,4 +19,6 @@ public class SaleItem {
     private String onlineShop;
     private int releaseYear;
     private String url;
+    private LocalDate updatedDate;
+    private String rawDocument;
 }

@@ -1,7 +1,8 @@
 package com.devoo.motorbike.analyzer.service;
 
 import com.devoo.motorbike.analyzer.MotorbikeAnalysisApplication;
-import com.devoo.motorbike.analyzer.crawler.NaverItemCrawler;
+import com.devoo.motorbike.analyzer.constants.DocumentStatus;
+import com.devoo.motorbike.analyzer.crawler.NaverCafeItemCrawler;
 import com.devoo.motorbike.analyzer.publish.NaverDocumentProcessor;
 import com.devoo.motorbike.analyzer.repository.SaleItemRepository;
 import com.devoo.motorbike.analyzer.repository.naver.AsyncNaverItemRepository;
@@ -11,23 +12,25 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 @Service
 @Slf4j
 public class NaverItemAnalysisService {
 
     private final AsyncNaverItemRepository asyncNaverItemRepository;
     private final SaleItemRepository saleItemRepository;
-    private final NaverItemCrawler naverItemCrawler;
+    private final NaverCafeItemCrawler naverCafeItemCrawler;
     private final NaverDocumentProcessor naverDocumentProcessor;
 
     @Autowired
     public NaverItemAnalysisService(AsyncNaverItemRepository asyncNaverItemRepository,
                                     SaleItemRepository saleItemRepository,
-                                    NaverItemCrawler naverItemCrawler,
+                                    NaverCafeItemCrawler naverCafeItemCrawler,
                                     NaverDocumentProcessor naverDocumentProcessor) {
         this.asyncNaverItemRepository = asyncNaverItemRepository;
         this.saleItemRepository = saleItemRepository;
-        this.naverItemCrawler = naverItemCrawler;
+        this.naverCafeItemCrawler = naverCafeItemCrawler;
         this.naverDocumentProcessor = naverDocumentProcessor;
     }
 
@@ -38,13 +41,16 @@ public class NaverItemAnalysisService {
     }
 
     public void startAnalysis() {
+        AtomicInteger count = new AtomicInteger(0);
         asyncNaverItemRepository.findAll()
                 .parallel()
-                .map(naverItemCrawler)
+                .map(naverCafeItemCrawler)
+                .filter(naverDocumentWrapper -> naverDocumentWrapper.getStatus().equals(DocumentStatus.NORMAL))
                 .map(naverDocumentProcessor)
+                .filter(saleItem -> saleItem.getRawDocument() != null)
                 .subscribe(resultItem -> {
                     saleItemRepository.save(resultItem);
-                    log.debug("saved analyzed item {}", resultItem);
+                    log.debug("{}: saved analyzed item {}", count.incrementAndGet(), resultItem.getUrl());
                 });
     }
 }

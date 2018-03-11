@@ -1,13 +1,13 @@
 package com.devoo.motorbike.analyzer.config.naver;
 
-import com.devoo.naverlogin.NaverLogin;
-import org.openqa.selenium.WebDriver;
+import com.devoo.naverlogin.NaverClient;
+import com.devoo.naverlogin.exception.NaverLoginFailException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class NaverLoginWebDriverConfig {
+public class NaverWebDriverClientConfig {
     @Value("${naver.userId}")
     private String userId;
 
@@ -15,7 +15,7 @@ public class NaverLoginWebDriverConfig {
     private String password;
 
     @Bean
-    public WebDriver naverLogin() {
-        return new NaverLogin().tryLogin(userId, password);
+    public NaverClient naverLogin() throws NaverLoginFailException {
+        return new NaverClient().tryLogin(userId, password);
     }
 }

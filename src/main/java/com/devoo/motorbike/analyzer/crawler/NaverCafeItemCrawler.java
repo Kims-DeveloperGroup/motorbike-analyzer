@@ -2,11 +2,10 @@ package com.devoo.motorbike.analyzer.crawler;
 
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
-import com.devoo.naverlogin.NaverPageCrawler;
+import com.devoo.naverlogin.NaverClient;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.UnhandledAlertException;
-import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,18 +19,16 @@ import static com.devoo.motorbike.analyzer.constants.DocumentStatus.NORMAL;
  */
 @Component
 @Slf4j
-public class NaverItemCrawler implements Function<NaverItem, NaverDocumentWrapper> {
+public class NaverCafeItemCrawler implements Function<NaverItem, NaverDocumentWrapper> {
 
-    private final NaverPageCrawler naverPageCrawler;
-    private final WebDriver naverLogin;
     public static final String DELETED_POST_ALERT_MESSAGE = "삭제되었거나 없는 게시글입니다";
+    public static final String CAFE_CONTENT_IFRAME_NAME = "cafe_main";
+    private final NaverClient naverClient;
 
 
     @Autowired
-    public NaverItemCrawler(WebDriver naverLogin) {
-        this.naverLogin = naverLogin;
-        naverPageCrawler = new NaverPageCrawler();
-
+    public NaverCafeItemCrawler(NaverClient naverClient) {
+        this.naverClient = naverClient;
     }
 
     /**
@@ -44,14 +41,13 @@ public class NaverItemCrawler implements Function<NaverItem, NaverDocumentWrappe
         NaverDocumentWrapper naverDocumentWrapper;
         String url = naverItem.getLink();
         try {
-            Document document = naverPageCrawler.getDocument(naverLogin, url);
-            document.setBaseUri(url);
-            naverDocumentWrapper = new NaverDocumentWrapper(document);
+            Document document = naverClient.getIframe(url, CAFE_CONTENT_IFRAME_NAME);
+            naverDocumentWrapper = new NaverDocumentWrapper(document, naverItem);
             naverDocumentWrapper.setStatus(NORMAL);
             log.debug("Crawling complete: {}", url);
         } catch (UnhandledAlertException e) {
             dismissAlert();
-            naverDocumentWrapper = new NaverDocumentWrapper(null);
+            naverDocumentWrapper = new NaverDocumentWrapper(null, naverItem);
             String exceptionMessage = e.getLocalizedMessage();
             log.debug("Exception: {}, message: {} ", url, exceptionMessage);
             if (exceptionMessage.contains(DELETED_POST_ALERT_MESSAGE)) {
@@ -63,7 +59,7 @@ public class NaverItemCrawler implements Function<NaverItem, NaverDocumentWrappe
     }
 
     private void dismissAlert() {
-        naverLogin.switchTo().alert().dismiss();
+        naverClient.closeAlert();
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.devoo.motorbike.analyzer.parser;
 
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.SaleItem;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
@@ -9,10 +10,12 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.util.Locale;
 
 @Component
+@Slf4j
 public class NaverDocumentParser {
     DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder()
             .appendValue(ChronoField.YEAR).appendLiteral('.')
@@ -28,8 +31,11 @@ public class NaverDocumentParser {
         saleItem.setOnlineShop(documentWrapper.getNaverItem().getCafeName());
         saleItem.setUrl(documentWrapper.getNaverItem().getLink());
         saleItem.setTitle(documentWrapper.getNaverItem().getTitle());
-
-        saleItem.setUpdatedDate(LocalDate.parse(documentWrapper.getNaverItem().getDate(), dateTimeFormatter));
+        try {
+            saleItem.setUpdatedDate(LocalDate.parse(documentWrapper.getNaverItem().getDate(), dateTimeFormatter));
+        } catch (DateTimeParseException e) {
+            log.debug("Exception: {}, {}", e, documentWrapper.getNaverItem().getDate());
+        }
         return saleItem;
     }
 

@@ -1,11 +1,14 @@
 package com.devoo.motorbike.analyzer.crawler;
 
+import com.devoo.motorbike.analyzer.constants.DocumentStatus;
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
+import com.devoo.motorbike.analyzer.repository.naver.NaverItemRepository;
 import com.devoo.naverlogin.NaverClient;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.UnhandledAlertException;
+import org.openqa.selenium.WebDriverException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -24,11 +27,13 @@ public class NaverCafeItemCrawler implements Function<NaverItem, NaverDocumentWr
     public static final String DELETED_POST_ALERT_MESSAGE = "삭제되었거나 없는 게시글입니다";
     public static final String CAFE_CONTENT_IFRAME_NAME = "cafe_main";
     private final NaverClient naverClient;
+    private final NaverItemRepository naverItemRepository;
 
 
     @Autowired
-    public NaverCafeItemCrawler(NaverClient naverClient) {
+    public NaverCafeItemCrawler(NaverClient naverClient, NaverItemRepository naverItemRepository) {
         this.naverClient = naverClient;
+        this.naverItemRepository = naverItemRepository;
     }
 
     /**
@@ -52,8 +57,12 @@ public class NaverCafeItemCrawler implements Function<NaverItem, NaverDocumentWr
             log.debug("Exception: {}, message: {} ", url, exceptionMessage);
             if (exceptionMessage.contains(DELETED_POST_ALERT_MESSAGE)) {
                 naverDocumentWrapper.setStatus(DELETED);
+                naverItemRepository.delete(naverItem);
                 log.debug("Deleted naver post: {}", url);
             }
+        } catch (WebDriverException e) {
+            naverDocumentWrapper = new NaverDocumentWrapper(null, naverItem);
+            naverDocumentWrapper.setStatus(DocumentStatus.EXCEPTIONAL);
         }
         return naverDocumentWrapper;
     }

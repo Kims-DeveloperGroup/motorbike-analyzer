@@ -1,4 +1,4 @@
-package com.devoo.motorbike.analyzer.publish;
+package com.devoo.motorbike.analyzer.processor;
 
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.SaleItem;

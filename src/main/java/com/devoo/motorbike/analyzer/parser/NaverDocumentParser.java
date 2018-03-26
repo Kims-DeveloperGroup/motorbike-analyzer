@@ -31,6 +31,7 @@ public class NaverDocumentParser {
         saleItem.setOnlineShop(documentWrapper.getNaverItem().getCafeName());
         saleItem.setUrl(documentWrapper.getNaverItem().getLink());
         saleItem.setTitle(documentWrapper.getNaverItem().getTitle());
+        log.debug("Naver document parsed to result item: {}", documentWrapper.getNaverItem().getLink());
         try {
             saleItem.setUpdatedDate(LocalDate.parse(documentWrapper.getNaverItem().getDate(), dateTimeFormatter));
         } catch (DateTimeParseException e) {

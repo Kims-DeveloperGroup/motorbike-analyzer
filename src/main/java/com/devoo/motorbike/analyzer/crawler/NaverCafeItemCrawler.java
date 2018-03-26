@@ -3,16 +3,18 @@ package com.devoo.motorbike.analyzer.crawler;
 import com.devoo.motorbike.analyzer.constants.DocumentStatus;
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
-import com.devoo.motorbike.analyzer.repository.naver.NaverItemRepository;
 import com.devoo.naverlogin.NaverClient;
+import com.devoo.naverlogin.ParallelNaverClient;
+import com.devoo.naverlogin.runner.ClientAction;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriverException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.function.Function;
+import java.util.concurrent.BlockingQueue;
+import java.util.stream.Stream;
 
 import static com.devoo.motorbike.analyzer.constants.DocumentStatus.DELETED;
 import static com.devoo.motorbike.analyzer.constants.DocumentStatus.NORMAL;
@@ -22,58 +24,61 @@ import static com.devoo.motorbike.analyzer.constants.DocumentStatus.NORMAL;
  */
 @Component
 @Slf4j
-public class NaverCafeItemCrawler implements Function<NaverItem, NaverDocumentWrapper> {
+public class NaverCafeItemCrawler {
 
     public static final String DELETED_POST_ALERT_MESSAGE = "삭제되었거나 없는 게시글입니다";
     public static final String CAFE_CONTENT_IFRAME_NAME = "cafe_main";
-    private final NaverClient naverClient;
-    private final NaverItemRepository naverItemRepository;
+    private int parallel;
 
+    @Value("${naver.userId}")
+    private String userId;
 
-    @Autowired
-    public NaverCafeItemCrawler(NaverClient naverClient, NaverItemRepository naverItemRepository) {
-        this.naverClient = naverClient;
-        this.naverItemRepository = naverItemRepository;
+    @Value("${naver.password}")
+    private String password;
+
+    public NaverCafeItemCrawler() {
+        this.parallel = 1;
     }
 
     /**
-     * Gets a document of a given url
-     *
-     * @param naverItem to crawl
-     * @return document parsed from page source.
+     * Gets documents of input items.
      */
-    public NaverDocumentWrapper getDocument(NaverItem naverItem) {
-        NaverDocumentWrapper naverDocumentWrapper;
-        String url = naverItem.getLink();
-        try {
-            Document document = naverClient.getIframe(url, CAFE_CONTENT_IFRAME_NAME);
-            naverDocumentWrapper = new NaverDocumentWrapper(document, naverItem);
-            naverDocumentWrapper.setStatus(NORMAL);
-            log.debug("Crawling complete: {}", url);
-        } catch (UnhandledAlertException e) {
-            dismissAlert();
-            naverDocumentWrapper = new NaverDocumentWrapper(null, naverItem);
-            String exceptionMessage = e.getLocalizedMessage();
-            log.debug("Exception: {}, message: {} ", url, exceptionMessage);
-            if (exceptionMessage.contains(DELETED_POST_ALERT_MESSAGE)) {
-                naverDocumentWrapper.setStatus(DELETED);
-                naverItemRepository.delete(naverItem);
-                log.debug("Deleted naver post: {}", url);
+    public Stream<NaverDocumentWrapper> getDocuments(BlockingQueue<NaverItem> inputQueue) throws InterruptedException {
+        ParallelNaverClient<NaverItem, NaverDocumentWrapper> parallelNaverClient = new ParallelNaverClient<>(this.parallel);
+        parallelNaverClient.tryToLogin(this.userId, this.password);
+        return parallelNaverClient.startAsynchronously(new NaverItemCrawlingAction(), inputQueue);
+    }
+
+    public void setParallel(int parallel) {
+        this.parallel = parallel;
+    }
+
+    public static class NaverItemCrawlingAction implements ClientAction<NaverItem, NaverDocumentWrapper> {
+
+        @Override
+        public NaverDocumentWrapper apply(NaverItem item, NaverClient client) {
+            NaverDocumentWrapper naverDocumentWrapper;
+            String url = item.getLink();
+            try {
+                Document document = client.getIframe(url, CAFE_CONTENT_IFRAME_NAME);
+                naverDocumentWrapper = new NaverDocumentWrapper(document, item);
+                naverDocumentWrapper.setStatus(NORMAL);
+                log.debug("Crawling complete: {}", url);
+            } catch (UnhandledAlertException e) {
+                client.closeAlert();
+                naverDocumentWrapper = new NaverDocumentWrapper(null, item);
+                String exceptionMessage = e.getLocalizedMessage();
+                log.debug("Exception: {}, message: {} ", url, exceptionMessage);
+                if (exceptionMessage.contains(DELETED_POST_ALERT_MESSAGE)) {
+                    naverDocumentWrapper.setStatus(DELETED);
+                    log.debug("Naver item is deleted: {}", url);
+                }
+            } catch (WebDriverException e) {
+                naverDocumentWrapper = new NaverDocumentWrapper(null, item);
+                naverDocumentWrapper.setStatus(DocumentStatus.EXCEPTIONAL);
             }
-        } catch (WebDriverException e) {
-            naverDocumentWrapper = new NaverDocumentWrapper(null, naverItem);
-            naverDocumentWrapper.setStatus(DocumentStatus.EXCEPTIONAL);
+            return naverDocumentWrapper;
         }
-        return naverDocumentWrapper;
-    }
 
-    private void dismissAlert() {
-        naverClient.closeAlert();
-    }
-
-    @Override
-    public NaverDocumentWrapper apply(NaverItem naverItem) {
-        log.debug("Crawling doc : {}", naverItem.getLink());
-        return getDocument(naverItem);
     }
 }

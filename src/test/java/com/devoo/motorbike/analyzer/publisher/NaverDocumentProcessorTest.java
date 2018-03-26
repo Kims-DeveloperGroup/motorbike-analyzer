@@ -1,8 +1,10 @@
-package com.devoo.motorbike.analyzer.publish;
+package com.devoo.motorbike.analyzer.publisher;
 
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.SaleItem;
+import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
 import com.devoo.motorbike.analyzer.parser.NaverDocumentParser;
+import com.devoo.motorbike.analyzer.processor.NaverDocumentProcessor;
 import org.assertj.core.api.Assertions;
 import org.jsoup.nodes.Document;
 import org.junit.Test;
@@ -24,10 +26,12 @@ public class NaverDocumentProcessorTest {
     public void shouldCrawledDocumentHasSameTitleAsTheGivenDocument_whenProcessingDocument() {
         //Given
         String pageUrl = "https://www.naver.com";
+        NaverItem naverItem = new NaverItem();
+        naverItem.setLink(pageUrl);
         Document document = new Document(pageUrl);
         SaleItem saleItem = new SaleItem();
         saleItem.setUrl(pageUrl);
-        NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(document);
+        NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(document, naverItem);
         Mockito.when(naverDocumentParser.parseToSaleItem(documentWrapper))
                 .thenReturn(saleItem);
         //When

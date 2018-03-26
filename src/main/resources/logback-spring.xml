@@ -27,6 +27,8 @@
         <appender-ref ref="stdout"/>
     </root>
     <logger name="com.devoo.motorbike.analyzer" level="DEBUG"/>
+    <logger name="com.devoo.naverlogin.*" level="DEBUG"/>
+
     <springProfile name="local">
         <root level="INFO">
             <appender-ref ref="dailyRollingFileAppender"/>

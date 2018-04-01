@@ -1,7 +1,7 @@
 package com.devoo.motorbike.analyzer.publisher;
 
 import com.devoo.motorbike.analyzer.config.ElasticSearchConfig;
-import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
+import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
 import com.devoo.motorbike.analyzer.repository.naver.NaverItemRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
@@ -33,7 +33,7 @@ public class TargetNaverItemPublisherIT {
         long totalItemCount = naverItemRepository.count();
         long expectedConsumingCount = totalItemCount > 100 ? 100 : totalItemCount;
         //When
-        BlockingQueue<NaverItem> itemQueue = targetNaverItemPublisher.publishNaverItems();
+        BlockingQueue<TargetNaverItem> itemQueue = targetNaverItemPublisher.publishNaverItems();
 
         //Then
         long actualConsumingCount = countConsumingItems(itemQueue, expectedConsumingCount);
@@ -41,12 +41,11 @@ public class TargetNaverItemPublisherIT {
         Assertions.assertThat(actualConsumingCount).isEqualTo(expectedConsumingCount);
     }
 
-    private long countConsumingItems(BlockingQueue<NaverItem> itemQueue, long consumingLimit) throws InterruptedException {
-        NaverItem consumed;
+    private long countConsumingItems(BlockingQueue<TargetNaverItem> itemQueue, long consumingLimit) throws InterruptedException {
+        TargetNaverItem consumed;
         AtomicLong count = new AtomicLong(0L);
         do {
             consumed = itemQueue.poll(1L, TimeUnit.SECONDS);
-            log.debug("consumed naver item: {}", consumed.getLink());
         } while (consumed != null && count.incrementAndGet() < consumingLimit);
         return count.get();
     }

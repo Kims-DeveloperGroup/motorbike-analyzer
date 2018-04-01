@@ -2,9 +2,9 @@ package com.devoo.motorbike.analyzer.publisher;
 
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.SaleItem;
-import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
-import com.devoo.motorbike.analyzer.parser.NaverDocumentParser;
-import com.devoo.motorbike.analyzer.processor.NaverDocumentProcessor;
+import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
+import com.devoo.motorbike.analyzer.processor.NaverProcessors;
+import com.devoo.motorbike.analyzer.processor.parser.NaverDocumentParser;
 import org.assertj.core.api.Assertions;
 import org.jsoup.nodes.Document;
 import org.junit.Test;
@@ -15,9 +15,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class NaverDocumentProcessorTest {
+public class NaverProcessorsTest {
     @InjectMocks
-    private NaverDocumentProcessor itemProcessor;
+    private NaverProcessors itemProcessor;
 
     @Mock
     private NaverDocumentParser naverDocumentParser;
@@ -26,12 +26,12 @@ public class NaverDocumentProcessorTest {
     public void shouldCrawledDocumentHasSameTitleAsTheGivenDocument_whenProcessingDocument() {
         //Given
         String pageUrl = "https://www.naver.com";
-        NaverItem naverItem = new NaverItem();
-        naverItem.setLink(pageUrl);
+        TargetNaverItem targetNaverItem = new TargetNaverItem();
+        targetNaverItem.setLink(pageUrl);
         Document document = new Document(pageUrl);
         SaleItem saleItem = new SaleItem();
         saleItem.setUrl(pageUrl);
-        NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(document, naverItem);
+        NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(document, targetNaverItem);
         Mockito.when(naverDocumentParser.parseToSaleItem(documentWrapper))
                 .thenReturn(saleItem);
         //When

@@ -4,8 +4,8 @@ import com.devoo.motorbike.analyzer.constants.DocumentStatus;
 import com.devoo.motorbike.analyzer.crawler.NaverCafeItemCrawler;
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.SaleItem;
-import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
-import com.devoo.motorbike.analyzer.processor.NaverDocumentProcessor;
+import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
+import com.devoo.motorbike.analyzer.processor.NaverProcessors;
 import com.devoo.motorbike.analyzer.publisher.TargetNaverItemPublisher;
 import com.devoo.motorbike.analyzer.repository.SaleItemRepository;
 import com.devoo.motorbike.analyzer.repository.naver.NaverItemRepository;
@@ -32,7 +32,7 @@ public class NaverItemAnalysisServiceTest {
     private NaverCafeItemCrawler naverCafeItemCrawler;
 
     @Mock
-    private NaverDocumentProcessor naverDocumentProcessor;
+    private NaverProcessors naverProcessors;
 
     @Mock
     private SaleItemRepository saleItemRepository;
@@ -51,7 +51,7 @@ public class NaverItemAnalysisServiceTest {
         SaleItem expectedResult = new SaleItem();
         expectedResult.setRawDocument("<html></html>");
         expectedResult.setUrl("http://localhost:8080");
-        when(naverDocumentProcessor.apply(normalStatusDoc)).thenReturn(expectedResult);
+        when(naverProcessors.apply(normalStatusDoc)).thenReturn(expectedResult);
 
         //When
         naverItemAnalysisService.startAnalysis();
@@ -64,9 +64,9 @@ public class NaverItemAnalysisServiceTest {
     public void shouldBeNonExistingNaverItemsDeletedAndBeFilteredOutBeforeProcessing_whenDeletedNaverItemsArePublished() throws InterruptedException {
 
         //Given
-        NaverItem naverItem = new NaverItem();
-        naverItem.setLink("http://localhost:8080");
-        NaverDocumentWrapper normalStatusDoc = new NaverDocumentWrapper(null, naverItem);
+        TargetNaverItem targetNaverItem = new TargetNaverItem();
+        targetNaverItem.setLink("http://localhost:8080");
+        NaverDocumentWrapper normalStatusDoc = new NaverDocumentWrapper(null, targetNaverItem);
         normalStatusDoc.setStatus(DocumentStatus.DELETED);
         when(naverCafeItemCrawler.getDocuments(any())).thenReturn(Stream.of(normalStatusDoc));
 
@@ -74,7 +74,7 @@ public class NaverItemAnalysisServiceTest {
         naverItemAnalysisService.startAnalysis();
 
         //Then
-        verify(naverItemRepository, times(1)).delete(any(NaverItem.class));
+        verify(naverItemRepository, times(1)).delete(any(TargetNaverItem.class));
         verify(saleItemRepository, times(0)).save(any(SaleItem.class));
     }
 
@@ -82,21 +82,21 @@ public class NaverItemAnalysisServiceTest {
     public void shouldBeCrawledNaverDocumentWrapperFilteredOut_whenNoDocumentIsRetrieved() throws InterruptedException {
 
         //Given
-        NaverItem naverItem = new NaverItem();
-        naverItem.setLink("http://localhost:8080");
-        NaverDocumentWrapper normalStatusDoc = new NaverDocumentWrapper(null, naverItem);
+        TargetNaverItem targetNaverItem = new TargetNaverItem();
+        targetNaverItem.setLink("http://localhost:8080");
+        NaverDocumentWrapper normalStatusDoc = new NaverDocumentWrapper(null, targetNaverItem);
         normalStatusDoc.setStatus(DocumentStatus.NORMAL);
         when(naverCafeItemCrawler.getDocuments(any())).thenReturn(Stream.of(normalStatusDoc));
         SaleItem expectedResult = new SaleItem();
         expectedResult.setUrl("http://localhost:8080");
-        when(naverDocumentProcessor.apply(normalStatusDoc)).thenReturn(expectedResult);
+        when(naverProcessors.apply(normalStatusDoc)).thenReturn(expectedResult);
 
         //When
         naverItemAnalysisService.startAnalysis();
 
         //Then
-        verify(naverItemRepository, times(0)).delete(any(NaverItem.class));
-        verify(naverDocumentProcessor, times(1)).apply(normalStatusDoc);
+        verify(naverItemRepository, times(0)).delete(any(TargetNaverItem.class));
+        verify(naverProcessors, times(1)).apply(normalStatusDoc);
         verify(saleItemRepository, times(0)).save(any(SaleItem.class));
     }
 }

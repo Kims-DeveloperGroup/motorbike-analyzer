@@ -3,8 +3,8 @@ package com.devoo.motorbike.analyzer.service;
 import com.devoo.motorbike.analyzer.MotorbikeAnalysisApplication;
 import com.devoo.motorbike.analyzer.constants.DocumentStatus;
 import com.devoo.motorbike.analyzer.crawler.NaverCafeItemCrawler;
-import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
-import com.devoo.motorbike.analyzer.processor.NaverDocumentProcessor;
+import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
+import com.devoo.motorbike.analyzer.processor.NaverProcessors;
 import com.devoo.motorbike.analyzer.publisher.TargetNaverItemPublisher;
 import com.devoo.motorbike.analyzer.repository.SaleItemRepository;
 import com.devoo.motorbike.analyzer.repository.naver.NaverItemRepository;
@@ -27,20 +27,20 @@ public class NaverItemAnalysisService {
     private final NaverItemRepository targetItemRepository;
     private final SaleItemRepository saleItemRepository;
     private final NaverCafeItemCrawler naverCafeItemCrawler;
-    private final NaverDocumentProcessor naverDocumentProcessor;
+    private final NaverProcessors naverProcessors;
 
     @Autowired
     public NaverItemAnalysisService(TargetNaverItemPublisher targetNaverItemPublisher,
                                     NaverItemRepository targetItemRepository,
                                     SaleItemRepository saleItemRepository,
                                     NaverCafeItemCrawler naverCafeItemCrawler,
-                                    NaverDocumentProcessor naverDocumentProcessor) {
+                                    NaverProcessors naverProcessors) {
         this.targetNaverItemPublisher = targetNaverItemPublisher;
         this.targetItemRepository = targetItemRepository;
         this.saleItemRepository = saleItemRepository;
         this.naverCafeItemCrawler = naverCafeItemCrawler;
         this.naverCafeItemCrawler.setParallel(3);
-        this.naverDocumentProcessor = naverDocumentProcessor;
+        this.naverProcessors = naverProcessors;
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -50,19 +50,19 @@ public class NaverItemAnalysisService {
     }
 
     public void startAnalysis() throws InterruptedException {
-        BlockingQueue<NaverItem> inputQueue = targetNaverItemPublisher.publishNaverItems();
+        BlockingQueue<TargetNaverItem> inputQueue = targetNaverItemPublisher.publishNaverItems();
 
         AtomicInteger count = new AtomicInteger(0);
         naverCafeItemCrawler.getDocuments(inputQueue)
                 .map(naverDocumentWrapper -> {
                     if (naverDocumentWrapper.getStatus().equals(DocumentStatus.DELETED)) {
-                        targetItemRepository.delete(naverDocumentWrapper.getNaverItem());
-                        log.debug("Deleted {} from repository", naverDocumentWrapper.getNaverItem().getLink());
+                        targetItemRepository.delete(naverDocumentWrapper.getTargetNaverItem());
+                        log.debug("Deleted {} from repository", naverDocumentWrapper.getTargetNaverItem().getLink());
                     }
                     return naverDocumentWrapper;
                 })
                 .filter(naverDocumentWrapper -> naverDocumentWrapper.getStatus().equals(DocumentStatus.NORMAL))
-                .map(naverDocumentProcessor)
+                .map(naverProcessors)
                 .filter(saleItem -> saleItem.getRawDocument() != null)
                 .forEach(resultItem -> {
                     saleItemRepository.save(resultItem);

@@ -2,7 +2,7 @@ package com.devoo.motorbike.analyzer.crawler;
 
 import com.devoo.motorbike.analyzer.constants.DocumentStatus;
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
-import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
+import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
 import com.devoo.naverlogin.NaverClient;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -26,17 +26,17 @@ public class NaverCafeItemCrawlerTest {
     @Test
     public void shouldBeDocumentMarkedAsDeleted_whenDeletedAlertShows() {
         //Given
-        NaverItem naverItem = new NaverItem();
-        naverItem.setLink("http://cafe.naver.com/bikecargogo");
+        TargetNaverItem targetNaverItem = new TargetNaverItem();
+        targetNaverItem.setLink("http://cafe.naver.com/bikecargogo");
         UnhandledAlertException unhandledAlertException =
                 new UnhandledAlertException(NaverCafeItemCrawler.DELETED_POST_ALERT_MESSAGE);
         Mockito.doThrow(unhandledAlertException).when(naverClient)
-                .getIframe(naverItem.getLink(), NaverCafeItemCrawler.CAFE_CONTENT_IFRAME_NAME);
+                .getIframe(targetNaverItem.getLink(), NaverCafeItemCrawler.CAFE_CONTENT_IFRAME_NAME);
         doNothing().when(naverClient).closeAlert();
 
         //When
         NaverCafeItemCrawler.NaverItemCrawlingAction naverItemCrawlingAction = new NaverCafeItemCrawler.NaverItemCrawlingAction();
-        NaverDocumentWrapper naverDocumentWrapper = naverItemCrawlingAction.apply(naverItem, naverClient);
+        NaverDocumentWrapper naverDocumentWrapper = naverItemCrawlingAction.apply(targetNaverItem, naverClient);
         DocumentStatus documentStatus = naverDocumentWrapper.getStatus();
 
         //Then

@@ -2,7 +2,7 @@ package com.devoo.motorbike.analyzer.crawler;
 
 import com.devoo.motorbike.analyzer.constants.DocumentStatus;
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
-import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
+import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
 import com.devoo.naverlogin.NaverClient;
 import com.devoo.naverlogin.ParallelNaverClient;
 import com.devoo.naverlogin.runner.ClientAction;
@@ -43,8 +43,8 @@ public class NaverCafeItemCrawler {
     /**
      * Gets documents of input items.
      */
-    public Stream<NaverDocumentWrapper> getDocuments(BlockingQueue<NaverItem> inputQueue) throws InterruptedException {
-        ParallelNaverClient<NaverItem, NaverDocumentWrapper> parallelNaverClient = new ParallelNaverClient<>(this.parallel);
+    public Stream<NaverDocumentWrapper> getDocuments(BlockingQueue<TargetNaverItem> inputQueue) throws InterruptedException {
+        ParallelNaverClient<TargetNaverItem, NaverDocumentWrapper> parallelNaverClient = new ParallelNaverClient<>(this.parallel);
         parallelNaverClient.tryToLogin(this.userId, this.password);
         return parallelNaverClient.startAsynchronously(new NaverItemCrawlingAction(), inputQueue);
     }
@@ -53,10 +53,10 @@ public class NaverCafeItemCrawler {
         this.parallel = parallel;
     }
 
-    public static class NaverItemCrawlingAction implements ClientAction<NaverItem, NaverDocumentWrapper> {
+    public static class NaverItemCrawlingAction implements ClientAction<TargetNaverItem, NaverDocumentWrapper> {
 
         @Override
-        public NaverDocumentWrapper apply(NaverItem item, NaverClient client) {
+        public NaverDocumentWrapper apply(TargetNaverItem item, NaverClient client) {
             NaverDocumentWrapper naverDocumentWrapper;
             String url = item.getLink();
             try {

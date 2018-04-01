@@ -6,7 +6,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 
 @Data
 @Document(indexName = "paxxo-item")
-public class PaxxoItem {
+public class TargetPaxxoItem {
     @Id
     private long id;
     private String title;

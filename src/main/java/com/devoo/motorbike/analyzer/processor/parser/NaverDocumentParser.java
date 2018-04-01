@@ -1,4 +1,4 @@
-package com.devoo.motorbike.analyzer.parser;
+package com.devoo.motorbike.analyzer.processor.parser;
 
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.SaleItem;
@@ -25,17 +25,17 @@ public class NaverDocumentParser {
 
     public SaleItem parseToSaleItem(NaverDocumentWrapper documentWrapper) {
         SaleItem saleItem = new SaleItem();
-        saleItem.setId(documentWrapper.getNaverItem().getLink());
+        saleItem.setId(documentWrapper.getTargetNaverItem().getLink());
         String refinedDocument = refineDocumentToPureContent(documentWrapper.getDocument());
         saleItem.setRawDocument(refinedDocument);
-        saleItem.setOnlineShop(documentWrapper.getNaverItem().getCafeName());
-        saleItem.setUrl(documentWrapper.getNaverItem().getLink());
-        saleItem.setTitle(documentWrapper.getNaverItem().getTitle());
-        log.debug("Naver document parsed to result item: {}", documentWrapper.getNaverItem().getLink());
+        saleItem.setOnlineShop(documentWrapper.getTargetNaverItem().getCafeName());
+        saleItem.setUrl(documentWrapper.getTargetNaverItem().getLink());
+        saleItem.setTitle(documentWrapper.getTargetNaverItem().getTitle());
+        log.debug("Naver document parsed to result item: {}", documentWrapper.getTargetNaverItem().getLink());
         try {
-            saleItem.setUpdatedDate(LocalDate.parse(documentWrapper.getNaverItem().getDate(), dateTimeFormatter));
+            saleItem.setUpdatedDate(LocalDate.parse(documentWrapper.getTargetNaverItem().getDate(), dateTimeFormatter));
         } catch (DateTimeParseException e) {
-            log.debug("Exception: {}, {}", e, documentWrapper.getNaverItem().getDate());
+            log.debug("Exception: {}, {}", e, documentWrapper.getTargetNaverItem().getDate());
         }
         return saleItem;
     }

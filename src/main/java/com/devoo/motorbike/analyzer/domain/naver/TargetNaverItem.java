@@ -6,7 +6,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 
 @Data
 @Document(indexName = "naver-item")
-public class NaverItem {
+public class TargetNaverItem {
     @Id
     private String link;
     private String title;

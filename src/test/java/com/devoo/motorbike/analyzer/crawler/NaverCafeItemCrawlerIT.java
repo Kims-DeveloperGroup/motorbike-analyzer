@@ -1,7 +1,7 @@
 package com.devoo.motorbike.analyzer.crawler;
 
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
-import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
+import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,11 +24,11 @@ public class NaverCafeItemCrawlerIT {
         //Given
         String targetCafeUrl = "http://cafe.naver.com/bikecargogo";
         String cafeTitle = "바이크튜닝매니아 [오토바이] [스쿠터] [이륜차] [바튜매 보험] : 네이버 카페";
-        NaverItem naverItem = new NaverItem();
-        naverItem.setLink(targetCafeUrl);
-        naverItem.setTitle(cafeTitle);
-        BlockingQueue<NaverItem> items = new LinkedBlockingQueue<>();
-        items.put(naverItem);
+        TargetNaverItem targetNaverItem = new TargetNaverItem();
+        targetNaverItem.setLink(targetCafeUrl);
+        targetNaverItem.setTitle(cafeTitle);
+        BlockingQueue<TargetNaverItem> items = new LinkedBlockingQueue<>();
+        items.put(targetNaverItem);
         naverCafeItemCrawler.setParallel(1);
         //When
         Optional<NaverDocumentWrapper> naverDocumentWrapper = naverCafeItemCrawler.getDocuments(items).findFirst();

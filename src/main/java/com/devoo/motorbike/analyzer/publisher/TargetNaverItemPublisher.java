@@ -1,6 +1,6 @@
 package com.devoo.motorbike.analyzer.publisher;
 
-import com.devoo.motorbike.analyzer.domain.naver.NaverItem;
+import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
 import com.devoo.motorbike.analyzer.repository.naver.NaverItemRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +26,12 @@ public class TargetNaverItemPublisher {
         executorService = Executors.newSingleThreadExecutor();
     }
 
-    public BlockingQueue<NaverItem> publishNaverItems() throws InterruptedException {
-        BlockingQueue<NaverItem> queue = new LinkedBlockingQueue<>(200);
+    public BlockingQueue<TargetNaverItem> publishNaverItems() throws InterruptedException {
+        BlockingQueue<TargetNaverItem> queue = new LinkedBlockingQueue<>(200);
         executorService.submit(() -> {
             log.debug("Staring consuming naver items.");
                     Pageable pageable = PageRequest.of(0, PAGE_SIZE);
-            Page<NaverItem> itemsOfPage = Page.empty();
+            Page<TargetNaverItem> itemsOfPage = Page.empty();
                     try {
                         while (true) {
                             itemsOfPage = findAllByPagination(pageable);
@@ -49,13 +49,13 @@ public class TargetNaverItemPublisher {
         return queue;
     }
 
-    private Page<NaverItem> findAllByPagination(Pageable pageable) {
+    private Page<TargetNaverItem> findAllByPagination(Pageable pageable) {
         return naverItemRepository.findAll(pageable);
     }
 
-    private void putItemsToQueue(BlockingQueue<NaverItem> queue, Collection<NaverItem> items) throws InterruptedException {
-        for (NaverItem naverItem : items) {
-            queue.put(naverItem);
+    private void putItemsToQueue(BlockingQueue<TargetNaverItem> queue, Collection<TargetNaverItem> items) throws InterruptedException {
+        for (TargetNaverItem targetNaverItem : items) {
+            queue.put(targetNaverItem);
         }
     }
 

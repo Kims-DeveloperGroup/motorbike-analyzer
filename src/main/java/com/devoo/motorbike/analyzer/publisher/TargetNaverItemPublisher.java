@@ -29,15 +29,20 @@ public class TargetNaverItemPublisher {
     public BlockingQueue<TargetNaverItem> publishNaverItems() throws InterruptedException {
         BlockingQueue<TargetNaverItem> queue = new LinkedBlockingQueue<>(200);
         executorService.submit(() -> {
-            log.debug("Staring consuming naver items.");
+                    log.debug("Staring consuming target naver items from repository.");
                     Pageable pageable = PageRequest.of(0, PAGE_SIZE);
-            Page<TargetNaverItem> itemsOfPage = Page.empty();
+                    Page<TargetNaverItem> itemsOfPage = Page.empty();
                     try {
                         while (true) {
                             itemsOfPage = findAllByPagination(pageable);
-                            log.debug("Read crawling target item from page {}", pageable.getPageNumber());
-                            pageable = pageable.next();
-                            putItemsToQueue(queue, itemsOfPage.getContent());
+                            if (itemsOfPage.getContent().isEmpty()) {
+                                log.debug("Finished consuming target naver item");
+                                break;
+                            }else {
+                                log.debug("Read crawling target item from page {}", pageable.getPageNumber());
+                                putItemsToQueue(queue, itemsOfPage.getContent());
+                                pageable = pageable.next();
+                            }
                         }
                     } catch (InterruptedException e) {
                         log.error("Exception was thrown while reading naver items into queue. current page:{}",

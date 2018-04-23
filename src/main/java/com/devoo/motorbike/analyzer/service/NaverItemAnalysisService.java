@@ -6,7 +6,7 @@ import com.devoo.motorbike.analyzer.crawler.NaverCafeItemCrawler;
 import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
 import com.devoo.motorbike.analyzer.processor.NaverProcessors;
 import com.devoo.motorbike.analyzer.publisher.TargetNaverItemPublisher;
-import com.devoo.motorbike.analyzer.repository.SaleItemRepository;
+import com.devoo.motorbike.analyzer.repository.ResultItemRepository;
 import com.devoo.motorbike.analyzer.repository.naver.NaverItemRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,19 +25,19 @@ public class NaverItemAnalysisService {
 
     private final TargetNaverItemPublisher targetNaverItemPublisher;
     private final NaverItemRepository targetItemRepository;
-    private final SaleItemRepository saleItemRepository;
+    private final ResultItemRepository resultItemRepository;
     private final NaverCafeItemCrawler naverCafeItemCrawler;
     private final NaverProcessors naverProcessors;
 
     @Autowired
     public NaverItemAnalysisService(TargetNaverItemPublisher targetNaverItemPublisher,
                                     NaverItemRepository targetItemRepository,
-                                    SaleItemRepository saleItemRepository,
+                                    ResultItemRepository resultItemRepository,
                                     NaverCafeItemCrawler naverCafeItemCrawler,
                                     NaverProcessors naverProcessors) {
         this.targetNaverItemPublisher = targetNaverItemPublisher;
         this.targetItemRepository = targetItemRepository;
-        this.saleItemRepository = saleItemRepository;
+        this.resultItemRepository = resultItemRepository;
         this.naverCafeItemCrawler = naverCafeItemCrawler;
         this.naverCafeItemCrawler.setParallel(3);
         this.naverProcessors = naverProcessors;
@@ -63,10 +63,10 @@ public class NaverItemAnalysisService {
                 })
                 .filter(naverDocumentWrapper -> naverDocumentWrapper.getStatus().equals(DocumentStatus.NORMAL))
                 .map(naverProcessors)
-                .filter(saleItem -> saleItem.getRawDocument() != null)
+                .filter(documentWrapper -> documentWrapper.getDocument() != null)
                 .forEach(resultItem -> {
-                    saleItemRepository.save(resultItem);
-                    log.debug("{}: saved analyzed item {}", count.incrementAndGet(), resultItem.getUrl());
+                    resultItemRepository.save(resultItem);
+                    log.debug("{}: saved analyzed item {}", count.incrementAndGet(), resultItem.getTargetNaverItem().getLink());
                 });
     }
 }

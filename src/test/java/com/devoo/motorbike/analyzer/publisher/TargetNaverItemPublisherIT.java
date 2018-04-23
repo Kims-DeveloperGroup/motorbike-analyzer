@@ -36,12 +36,12 @@ public class TargetNaverItemPublisherIT {
         BlockingQueue<TargetNaverItem> itemQueue = targetNaverItemPublisher.publishNaverItems();
 
         //Then
-        long actualConsumingCount = countConsumingItems(itemQueue, expectedConsumingCount);
+        long actualConsumingCount = countConsumingItemsUntilConsumingLimit(itemQueue, expectedConsumingCount);
 
         Assertions.assertThat(actualConsumingCount).isEqualTo(expectedConsumingCount);
     }
 
-    private long countConsumingItems(BlockingQueue<TargetNaverItem> itemQueue, long consumingLimit) throws InterruptedException {
+    private long countConsumingItemsUntilConsumingLimit(BlockingQueue<TargetNaverItem> itemQueue, long consumingLimit) throws InterruptedException {
         TargetNaverItem consumed;
         AtomicLong count = new AtomicLong(0L);
         do {

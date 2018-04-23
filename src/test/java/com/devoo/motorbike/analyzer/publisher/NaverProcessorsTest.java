@@ -1,44 +1,51 @@
 package com.devoo.motorbike.analyzer.publisher;
 
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
-import com.devoo.motorbike.analyzer.domain.SaleItem;
 import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
 import com.devoo.motorbike.analyzer.processor.NaverProcessors;
-import com.devoo.motorbike.analyzer.processor.parser.NaverDocumentParser;
+import com.devoo.motorbike.analyzer.processor.naver.BatumaSaleItemProcessor;
+import com.devoo.motorbike.analyzer.processor.naver.NaverCafeDocumentRefiner;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import org.assertj.core.api.Assertions;
 import org.jsoup.nodes.Document;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class NaverProcessorsTest {
     @InjectMocks
-    private NaverProcessors itemProcessor;
+    private NaverProcessors naverProcessors;
 
     @Mock
-    private NaverDocumentParser naverDocumentParser;
+    private NaverCafeDocumentRefiner documentRefiner;
+
+    @Mock
+    private BatumaSaleItemProcessor processor;
+
+    private Gson gson = new Gson();
 
     @Test
-    public void shouldCrawledDocumentHasSameTitleAsTheGivenDocument_whenProcessingDocument() {
+    public void shouldResultItemHasProcessedItem_whenProcessedItemsReturnedFromProcessor() {
         //Given
         String pageUrl = "https://www.naver.com";
         TargetNaverItem targetNaverItem = new TargetNaverItem();
         targetNaverItem.setLink(pageUrl);
         Document document = new Document(pageUrl);
-        SaleItem saleItem = new SaleItem();
-        saleItem.setUrl(pageUrl);
         NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(document, targetNaverItem);
-        Mockito.when(naverDocumentParser.parseToSaleItem(documentWrapper))
-                .thenReturn(saleItem);
+        when(documentRefiner.execute(documentWrapper)).thenReturn(documentWrapper);
+        JsonElement fromProcessor = gson.toJsonTree("{result: 1}");
+        when(processor.execute(documentWrapper)).thenReturn(fromProcessor);
+
         //When
-        SaleItem processed = itemProcessor.apply(documentWrapper);
-        String processedPageUrl = processed.getUrl();
+        NaverDocumentWrapper processed = naverProcessors.apply(documentWrapper);
 
         //Then
-        Assertions.assertThat(processedPageUrl).isEqualTo(pageUrl);
+        Assertions.assertThat(processed.getProcessedResults().size()).isGreaterThan(0);
     }
 }

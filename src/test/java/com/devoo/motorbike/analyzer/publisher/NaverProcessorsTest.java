@@ -6,7 +6,7 @@ import com.devoo.motorbike.analyzer.processor.NaverProcessors;
 import com.devoo.motorbike.analyzer.processor.naver.BatumaSaleItemProcessor;
 import com.devoo.motorbike.analyzer.processor.naver.NaverCafeDocumentRefiner;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.assertj.core.api.Assertions;
 import org.jsoup.nodes.Document;
 import org.junit.Test;
@@ -39,7 +39,8 @@ public class NaverProcessorsTest {
         Document document = new Document(pageUrl);
         NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(document, targetNaverItem);
         when(documentRefiner.execute(documentWrapper)).thenReturn(documentWrapper);
-        JsonElement fromProcessor = gson.toJsonTree("{result: 1}");
+        JsonObject fromProcessor = new JsonObject();
+        fromProcessor.addProperty("result", "resultValue");
         when(processor.execute(documentWrapper)).thenReturn(fromProcessor);
 
         //When

@@ -1,8 +1,12 @@
 package com.devoo.motorbike.analyzer.processor.naver;
 
+import com.devoo.motorbike.analyzer.domain.Model;
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.processor.Processor;
+import com.devoo.motorbike.analyzer.processor.parser.ModelNameParser;
+import com.devoo.motorbike.analyzer.processor.parser.PriceParser;
 import com.devoo.motorbike.analyzer.processor.parser.YearParser;
+import com.devoo.motorbike.analyzer.service.ProductModelInfoService;
 import com.google.gson.JsonElement;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +25,16 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
     private final Pattern modelInfoPattern = Pattern.compile(".*모델.*");
     private final Pattern RELEASED_YEAR_TEXT_PATTERN = Pattern.compile(".*연식.*");
     private final YearParser yearParser;
+    private final PriceParser priceParser;
+    private final ModelNameParser modelNameParser;
+    private final ProductModelInfoService productModelInfoService;
 
     @Autowired
-    public BatumaSaleItemProcessor(YearParser yearParser) {
+    public BatumaSaleItemProcessor(YearParser yearParser, PriceParser priceParser, ModelNameParser modelNameParser, ProductModelInfoService productModelInfoService) {
         this.yearParser = yearParser;
+        this.priceParser = priceParser;
+        this.modelNameParser = modelNameParser;
+        this.productModelInfoService = productModelInfoService;
     }
 
     @Override
@@ -44,7 +54,7 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
         Optional<Elements> releaseYear = Optional.ofNullable(rawDocument.getElementsMatchingOwnText(RELEASED_YEAR_TEXT_PATTERN));
         if (releaseYear.isPresent()) {
             String text = releaseYear.get().get(0).text();
-            Integer releasedYear = yearParser.getYear(text);
+            Integer releasedYear = yearParser.parse(text);
             if (releasedYear != null) {
                 return releasedYear;
             }
@@ -52,13 +62,11 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
         return null;
     }
 
-    private Double extractPrice(Document rawDocument) {
+    private Long extractPrice(Document rawDocument) {
         Optional<Elements> price = Optional.ofNullable(rawDocument.select(".cost"));
         if (price.isPresent()) {
             String text = price.get().get(0).text();
-            text = text.replace("원", "");
-            text = text.replace(",", "");
-            return Double.valueOf(text);
+            return priceParser.parse(text);
         }
         return null;
     }
@@ -77,7 +85,13 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
     private String extractModel(Document rawDocument) {
         Optional<Elements> model = Optional.ofNullable(rawDocument.getElementsMatchingOwnText(modelInfoPattern));
         if (model.isPresent()) {
-            return model.get().get(0).text();
+            String parsedModelName = modelNameParser.parse(model.get().get(0).text());
+            Optional<Model> matchedModelByName = productModelInfoService.findMatchedModelByName(parsedModelName);
+            if (matchedModelByName.isPresent()) {
+                return matchedModelByName.get().getName();
+            } else {
+                return parsedModelName;
+            }
         }
         return null;
     }
@@ -93,7 +107,7 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
         private String model;
         private Integer displacement;
         private Integer releaseYear;
-        private Double price;
+        private Long price;
         private String region;
         private String seller;
         private SaleStatus saleStatus;

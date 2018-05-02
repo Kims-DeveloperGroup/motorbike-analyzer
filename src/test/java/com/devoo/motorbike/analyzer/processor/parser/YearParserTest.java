@@ -14,7 +14,7 @@ public class YearParserTest {
         int expectedYear = 2014;
 
         //When
-        Integer actualYearFromText = yearParser.getYear(textWith4DigitNumber);
+        Integer actualYearFromText = yearParser.parse(textWith4DigitNumber);
 
         //Then
         assertThat(actualYearFromText).isEqualTo(expectedYear);
@@ -27,7 +27,7 @@ public class YearParserTest {
         int expectedYear = 2014;
 
         //When
-        Integer actualYearFromText = yearParser.getYear(textWith4DigitNumber);
+        Integer actualYearFromText = yearParser.parse(textWith4DigitNumber);
 
         //Then
         assertThat(actualYearFromText).isEqualTo(expectedYear);
@@ -40,7 +40,7 @@ public class YearParserTest {
         int expectedYear = 2000;
 
         //When
-        Integer actualYearFromText = yearParser.getYear(textWith4DigitNumber);
+        Integer actualYearFromText = yearParser.parse(textWith4DigitNumber);
 
         //Then
         assertThat(actualYearFromText).isEqualTo(expectedYear);
@@ -53,7 +53,7 @@ public class YearParserTest {
         int expectedYear = 1938;
 
         //When
-        Integer actualYearFromText = yearParser.getYear(textWith4DigitNumber);
+        Integer actualYearFromText = yearParser.parse(textWith4DigitNumber);
 
         //Then
         assertThat(actualYearFromText).isEqualTo(expectedYear);

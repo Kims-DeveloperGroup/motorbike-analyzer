@@ -2,22 +2,47 @@ package com.devoo.motorbike.analyzer.processor.naver;
 
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
+import com.devoo.motorbike.analyzer.processor.parser.ModelNameParser;
+import com.devoo.motorbike.analyzer.processor.parser.PriceParser;
 import com.devoo.motorbike.analyzer.processor.parser.YearParser;
+import com.devoo.motorbike.analyzer.service.ProductModelInfoService;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import static com.devoo.motorbike.analyzer.processor.naver.BatumaSaleItemProcessor.BATUMA_BASE_DOMAIN_URL;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
+@RunWith(MockitoJUnitRunner.class)
 public class BatumaSaleItemProcessorTest {
-    private static final BatumaSaleItemProcessor batumaSaleItemProcessor = new BatumaSaleItemProcessor(new YearParser());
+    @Mock
+    private ProductModelInfoService productModelInfoService;
+
+    @Mock
+    private YearParser yearParser;
+
+    @Mock
+    private PriceParser priceParser;
+
+    @Mock
+    private ModelNameParser modelNameParser;
+
+    @InjectMocks
+    private BatumaSaleItemProcessor batumaSaleItemProcessor;
+
     private static Document sampleDoc;
 
     @BeforeClass
@@ -64,14 +89,15 @@ public class BatumaSaleItemProcessorTest {
         TargetNaverItem naverItem = new TargetNaverItem();
         naverItem.setLink(BATUMA_BASE_DOMAIN_URL);
         NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(sampleDoc, naverItem);
-        String expectedModelText = "1. 제작사, 모델명 : BMW K1300S";
-
+        String modelName = "K1300S";
+        when(modelNameParser.parse(anyString())).thenReturn(modelName);
+        when(productModelInfoService.findMatchedModelByName(modelName)).thenReturn(Optional.empty());
         //When
         JsonObject processed = batumaSaleItemProcessor.execute(documentWrapper).getAsJsonObject();
 
         //Then
         String actualModel = processed.get("model").getAsString();
-        assertThat(actualModel).isEqualTo(expectedModelText);
+        assertThat(actualModel).isNotNull();
     }
 
     @Test
@@ -81,6 +107,7 @@ public class BatumaSaleItemProcessorTest {
         naverItem.setLink(BATUMA_BASE_DOMAIN_URL);
         NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(sampleDoc, naverItem);
         int expectedReleaseYear = 2010;
+        when(yearParser.parse(anyString())).thenReturn(expectedReleaseYear);
 
         //When
         JsonObject processed = batumaSaleItemProcessor.execute(documentWrapper).getAsJsonObject();

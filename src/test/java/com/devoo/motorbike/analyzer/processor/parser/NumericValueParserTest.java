@@ -4,8 +4,8 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
-public class PriceParserTest {
-    public static final PriceParser priceParser = new PriceParser();
+public class NumericValueParserTest {
+    public static final NumericValueParser numericValueParser = new NumericValueParser();
 
     @Test
     public void shouldBeNumericValueReturned_whenTheGivenValueIsCommaSeparated() {
@@ -13,7 +13,7 @@ public class PriceParserTest {
         String commaSeparateValue = "1,000,000원";
 
         //When
-        Long actual = priceParser.parse(commaSeparateValue);
+        Long actual = numericValueParser.parse(commaSeparateValue);
 
         //Then
         assertThat(actual).isEqualTo(1000000);
@@ -25,7 +25,7 @@ public class PriceParserTest {
         String commaSeparateValue = "1.가격 1,000,000원";
 
         //When
-        Long actual = priceParser.parse(commaSeparateValue);
+        Long actual = numericValueParser.parse(commaSeparateValue);
 
         //Then
         assertThat(actual).isEqualTo(1000000);
@@ -37,7 +37,7 @@ public class PriceParserTest {
         String commaSeparateValue = "1] 가격 1,000,000원";
 
         //When
-        Long actual = priceParser.parse(commaSeparateValue);
+        Long actual = numericValueParser.parse(commaSeparateValue);
 
         //Then
         assertThat(actual).isEqualTo(1000000);

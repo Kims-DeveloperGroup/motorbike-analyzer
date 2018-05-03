@@ -6,7 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
-public class PriceParser implements Parser<Long> {
+public class NumericValueParser implements Parser<Long> {
     public static final Pattern NUMERIC = Pattern.compile("([0-9])");
     public static final Pattern EXCLUDED_NUMBER_TAG_PATTERN = Pattern.compile("[0-9]+[/.)>:\\]]");
 

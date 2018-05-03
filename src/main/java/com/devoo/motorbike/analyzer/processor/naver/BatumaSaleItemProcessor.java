@@ -4,7 +4,7 @@ import com.devoo.motorbike.analyzer.domain.Model;
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.processor.Processor;
 import com.devoo.motorbike.analyzer.processor.parser.ModelNameParser;
-import com.devoo.motorbike.analyzer.processor.parser.PriceParser;
+import com.devoo.motorbike.analyzer.processor.parser.NumericValueParser;
 import com.devoo.motorbike.analyzer.processor.parser.YearParser;
 import com.devoo.motorbike.analyzer.service.ProductModelInfoService;
 import com.google.gson.JsonElement;
@@ -24,15 +24,16 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
     public static final String BATUMA_BASE_DOMAIN_URL = "http://cafe.naver.com/bikecargogo";
     private final Pattern modelInfoPattern = Pattern.compile(".*모델.*");
     private final Pattern RELEASED_YEAR_TEXT_PATTERN = Pattern.compile(".*연식.*");
+    private Pattern MILEAGE_TEXT_PATTERN = Pattern.compile(".+적산거리.+");
     private final YearParser yearParser;
-    private final PriceParser priceParser;
+    private final NumericValueParser numericValueParser;
     private final ModelNameParser modelNameParser;
     private final ProductModelInfoService productModelInfoService;
 
     @Autowired
-    public BatumaSaleItemProcessor(YearParser yearParser, PriceParser priceParser, ModelNameParser modelNameParser, ProductModelInfoService productModelInfoService) {
+    public BatumaSaleItemProcessor(YearParser yearParser, NumericValueParser numericValueParser, ModelNameParser modelNameParser, ProductModelInfoService productModelInfoService) {
         this.yearParser = yearParser;
-        this.priceParser = priceParser;
+        this.numericValueParser = numericValueParser;
         this.modelNameParser = modelNameParser;
         this.productModelInfoService = productModelInfoService;
     }
@@ -46,8 +47,14 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
         batumaSaleItem.setPrice(extractPrice(rawDocument));
         batumaSaleItem.setModel(extractModel(rawDocument));
         batumaSaleItem.setReleaseYear(extractReleasedYear(rawDocument));
+        batumaSaleItem.setMileage(extractMileage(rawDocument));
         log.debug("Document is processed to parse to BatumaSaleItem. {}", param.getTargetNaverItem().getLink());
         return gson.toJsonTree(batumaSaleItem);
+    }
+
+    private Long extractMileage(Document rawDocument) {
+        String mileageInfoText = getFirstElementMatchingOwnTextFromDocument(rawDocument, MILEAGE_TEXT_PATTERN);
+        return numericValueParser.parse(mileageInfoText);
     }
 
     private Integer extractReleasedYear(Document rawDocument) {
@@ -66,7 +73,7 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
         Optional<Elements> price = Optional.ofNullable(rawDocument.select(".cost"));
         if (price.isPresent()) {
             String text = price.get().get(0).text();
-            return priceParser.parse(text);
+            return numericValueParser.parse(text);
         }
         return null;
     }
@@ -96,11 +103,18 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
         return null;
     }
 
+    private String getFirstElementMatchingOwnTextFromDocument(Document rawDocument, Pattern textPattern) {
+        Elements elements = rawDocument.getElementsMatchingOwnText(textPattern);
+        if (elements == null || elements.isEmpty()) {
+            return null;
+        }
+        return elements.get(0).text();
+    }
+
     @Override
     public boolean test(NaverDocumentWrapper candidateItemToProcess) {
         return candidateItemToProcess.getTargetNaverItem().getLink().startsWith(BATUMA_BASE_DOMAIN_URL);
     }
-
     @Data
     private class BatumaSaleItem {
         private final String ITEM_TYPE = "BATUMA_SALE_ITEM";
@@ -108,6 +122,7 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
         private Integer displacement;
         private Integer releaseYear;
         private Long price;
+        private Long mileage;
         private String region;
         private String seller;
         private SaleStatus saleStatus;

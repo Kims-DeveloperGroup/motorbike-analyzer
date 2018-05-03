@@ -3,7 +3,7 @@ package com.devoo.motorbike.analyzer.processor.naver;
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
 import com.devoo.motorbike.analyzer.processor.parser.ModelNameParser;
-import com.devoo.motorbike.analyzer.processor.parser.PriceParser;
+import com.devoo.motorbike.analyzer.processor.parser.NumericValueParser;
 import com.devoo.motorbike.analyzer.processor.parser.YearParser;
 import com.devoo.motorbike.analyzer.service.ProductModelInfoService;
 import com.google.gson.JsonElement;
@@ -35,7 +35,7 @@ public class BatumaSaleItemProcessorTest {
     private YearParser yearParser;
 
     @Mock
-    private PriceParser priceParser;
+    private NumericValueParser numericValueParser;
 
     @Mock
     private ModelNameParser modelNameParser;
@@ -115,5 +115,22 @@ public class BatumaSaleItemProcessorTest {
         //Then
         int actualReleasedYear = processed.get("releaseYear").getAsInt();
         assertThat(actualReleasedYear).isEqualTo(expectedReleaseYear);
+    }
+
+    @Test
+    public void shouldBeMileageExtractedFromDocument_whenTheDocHas() {
+        //Given
+        TargetNaverItem naverItem = new TargetNaverItem();
+        naverItem.setLink(BATUMA_BASE_DOMAIN_URL);
+        NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(sampleDoc, naverItem);
+        long expectedMileage = 7486;
+        when(numericValueParser.parse(anyString())).thenReturn(expectedMileage);
+
+        //When
+        JsonObject processed = batumaSaleItemProcessor.execute(documentWrapper).getAsJsonObject();
+
+        //Then
+        long actualReleasedYear = processed.get("mileage").getAsLong();
+        assertThat(actualReleasedYear).isEqualTo(expectedMileage);
     }
 }

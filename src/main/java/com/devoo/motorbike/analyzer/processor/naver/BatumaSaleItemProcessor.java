@@ -115,6 +115,7 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
     public boolean test(NaverDocumentWrapper candidateItemToProcess) {
         return candidateItemToProcess.getTargetNaverItem().getLink().startsWith(BATUMA_BASE_DOMAIN_URL);
     }
+
     @Data
     private class BatumaSaleItem {
         private final String ITEM_TYPE = "BATUMA_SALE_ITEM";

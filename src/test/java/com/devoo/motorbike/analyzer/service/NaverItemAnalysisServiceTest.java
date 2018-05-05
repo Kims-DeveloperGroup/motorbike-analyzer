@@ -8,6 +8,7 @@ import com.devoo.motorbike.analyzer.processor.NaverProcessors;
 import com.devoo.motorbike.analyzer.publisher.TargetNaverItemPublisher;
 import com.devoo.motorbike.analyzer.repository.ResultItemRepository;
 import com.devoo.motorbike.analyzer.repository.naver.NaverItemRepository;
+import com.google.gson.JsonObject;
 import org.jsoup.Jsoup;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -41,7 +44,7 @@ public class NaverItemAnalysisServiceTest {
     private NaverItemRepository naverItemRepository;
 
     @Test
-    public void shouldBeNaverItemsProcessedToResultItemAndSaved_whenNormalStatusTargetItemIsCrawled() throws InterruptedException {
+    public void shouldBeNaverItemsProcessedToResultItem_whenNormalStatusTargetItemIsCrawled() throws InterruptedException {
 
         //Given
         TargetNaverItem targetNaverItem = new TargetNaverItem();
@@ -56,8 +59,52 @@ public class NaverItemAnalysisServiceTest {
         naverItemAnalysisService.startAnalysis();
 
         //Then
-        verify(resultItemRepository, times(1)).save(any(NaverDocumentWrapper.class));
+        verify(naverProcessors, times(1)).apply(normalStatusDocWrapper);
     }
+
+    @Test
+    public void shouldBeResultItemNotSaved_whenProcessedResultNotExists() throws InterruptedException {
+
+        //Given
+        TargetNaverItem targetNaverItem = new TargetNaverItem();
+        targetNaverItem.setLink("http://www.naver.com");
+        NaverDocumentWrapper normalStatusDocWrapper = new NaverDocumentWrapper(null, targetNaverItem);
+        normalStatusDocWrapper.setStatus(DocumentStatus.NORMAL);
+        normalStatusDocWrapper.setDocument(Jsoup.parse("<html>test</html>"));
+        normalStatusDocWrapper.setProcessedResults(Arrays.asList());
+        when(naverCafeItemCrawler.getDocuments(any())).thenReturn(Stream.of(normalStatusDocWrapper));
+        when(naverProcessors.apply(normalStatusDocWrapper)).thenReturn(normalStatusDocWrapper);
+
+        //When
+        naverItemAnalysisService.startAnalysis();
+
+        //Then
+        verify(naverProcessors, times(1)).apply(normalStatusDocWrapper);
+        verify(resultItemRepository, never()).save(normalStatusDocWrapper);
+    }
+
+    @Test
+    public void shouldBeResultItemSaved_whenProcessedResultExists() throws InterruptedException {
+
+        //Given
+        TargetNaverItem targetNaverItem = new TargetNaverItem();
+        targetNaverItem.setLink("http://www.naver.com");
+        NaverDocumentWrapper normalStatusDocWrapper = new NaverDocumentWrapper(null, targetNaverItem);
+        normalStatusDocWrapper.setStatus(DocumentStatus.NORMAL);
+        normalStatusDocWrapper.setDocument(Jsoup.parse("<html>test</html>"));
+        List<JsonObject> processedResults = Arrays.asList(new JsonObject());
+        normalStatusDocWrapper.setProcessedResults(processedResults);
+        when(naverCafeItemCrawler.getDocuments(any())).thenReturn(Stream.of(normalStatusDocWrapper));
+        when(naverProcessors.apply(normalStatusDocWrapper)).thenReturn(normalStatusDocWrapper);
+
+        //When
+        naverItemAnalysisService.startAnalysis();
+
+        //Then
+        verify(naverProcessors, times(1)).apply(normalStatusDocWrapper);
+        verify(resultItemRepository, times(1)).save(normalStatusDocWrapper);
+    }
+
 
     @Test
     public void shouldBeNonExistingNaverItemsDeletedAndBeFilteredOutBeforeProcessing_whenDeletedNaverItemsArePublished() throws InterruptedException {

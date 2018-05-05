@@ -63,6 +63,7 @@ public class NaverItemAnalysisService {
                 })
                 .filter(naverDocumentWrapper -> naverDocumentWrapper.getStatus().equals(DocumentStatus.NORMAL))
                 .map(naverProcessors)
+                .filter(documentWrapper -> documentWrapper.getProcessedResults().size() > 0)
                 .filter(documentWrapper -> documentWrapper.getDocument() != null)
                 .forEach(resultItem -> {
                     resultItemRepository.save(resultItem);

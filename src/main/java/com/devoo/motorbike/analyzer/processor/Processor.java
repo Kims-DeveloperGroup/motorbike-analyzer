@@ -1,9 +1,6 @@
 package com.devoo.motorbike.analyzer.processor;
 
-import com.google.gson.Gson;
-
 public interface Processor<T, R> {
-    Gson gson = new Gson();
 
     default R execute(T param) {
         if (test(param)) {

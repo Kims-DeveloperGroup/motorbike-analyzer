@@ -4,9 +4,9 @@ import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
 import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
 import com.devoo.motorbike.analyzer.processor.NaverProcessors;
 import com.devoo.motorbike.analyzer.processor.naver.BatumaSaleItemProcessor;
+import com.devoo.motorbike.analyzer.processor.naver.BatumaSaleItemProcessor.BatumaSaleItem;
 import com.devoo.motorbike.analyzer.processor.naver.NaverCafeDocumentRefiner;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import org.assertj.core.api.Assertions;
 import org.jsoup.nodes.Document;
 import org.junit.Test;
@@ -39,8 +39,7 @@ public class NaverProcessorsTest {
         Document document = new Document(pageUrl);
         NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(document, targetNaverItem);
         when(documentRefiner.execute(documentWrapper)).thenReturn(documentWrapper);
-        JsonObject fromProcessor = new JsonObject();
-        fromProcessor.addProperty("result", "resultValue");
+        BatumaSaleItem fromProcessor = new BatumaSaleItem();
         when(processor.execute(documentWrapper)).thenReturn(fromProcessor);
 
         //When

@@ -6,8 +6,6 @@ import com.devoo.motorbike.analyzer.processor.parser.ModelNameParser;
 import com.devoo.motorbike.analyzer.processor.parser.NumericValueParser;
 import com.devoo.motorbike.analyzer.processor.parser.YearParser;
 import com.devoo.motorbike.analyzer.service.ProductModelInfoService;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.BeforeClass;
@@ -61,11 +59,11 @@ public class BatumaSaleItemProcessorTest {
         NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(sampleDoc, naverItem);
 
         //When
-        JsonObject processed = batumaSaleItemProcessor.execute(documentWrapper).getAsJsonObject();
+        BatumaSaleItemProcessor.BatumaSaleItem processed = batumaSaleItemProcessor.execute(documentWrapper);
 
         //Then
-        assertThat(processed.get("saleStatus").getAsString())
-                .isEqualTo(SaleStatus.ON_SALE.toString());
+        assertThat(processed.getSaleStatus())
+                .isEqualTo(SaleStatus.ON_SALE);
     }
 
     @Test
@@ -76,10 +74,10 @@ public class BatumaSaleItemProcessorTest {
 
         NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(sampleDoc, naverItem);
         //When
-        JsonObject processed = batumaSaleItemProcessor.execute(documentWrapper).getAsJsonObject();
+        BatumaSaleItemProcessor.BatumaSaleItem processed = batumaSaleItemProcessor.execute(documentWrapper);
 
         //Then
-        JsonElement actualPriceFromDoc = processed.get("price");
+        Long actualPriceFromDoc = processed.getPrice();
         assertThat(actualPriceFromDoc).isNotNull();
     }
 
@@ -93,10 +91,10 @@ public class BatumaSaleItemProcessorTest {
         when(modelNameParser.parse(anyString())).thenReturn(modelName);
         when(productModelInfoService.findMatchedModelByName(modelName)).thenReturn(Optional.empty());
         //When
-        JsonObject processed = batumaSaleItemProcessor.execute(documentWrapper).getAsJsonObject();
+        BatumaSaleItemProcessor.BatumaSaleItem processed = batumaSaleItemProcessor.execute(documentWrapper);
 
         //Then
-        String actualModel = processed.get("model").getAsString();
+        String actualModel = processed.getModel();
         assertThat(actualModel).isNotNull();
     }
 
@@ -110,10 +108,10 @@ public class BatumaSaleItemProcessorTest {
         when(yearParser.parse(anyString())).thenReturn(expectedReleaseYear);
 
         //When
-        JsonObject processed = batumaSaleItemProcessor.execute(documentWrapper).getAsJsonObject();
+        BatumaSaleItemProcessor.BatumaSaleItem processed = batumaSaleItemProcessor.execute(documentWrapper);
 
         //Then
-        int actualReleasedYear = processed.get("releaseYear").getAsInt();
+        int actualReleasedYear = processed.getReleaseYear();
         assertThat(actualReleasedYear).isEqualTo(expectedReleaseYear);
     }
 
@@ -127,10 +125,10 @@ public class BatumaSaleItemProcessorTest {
         when(numericValueParser.parse(anyString())).thenReturn(expectedMileage);
 
         //When
-        JsonObject processed = batumaSaleItemProcessor.execute(documentWrapper).getAsJsonObject();
+        BatumaSaleItemProcessor.BatumaSaleItem processed = batumaSaleItemProcessor.execute(documentWrapper);
 
         //Then
-        long actualReleasedYear = processed.get("mileage").getAsLong();
+        long actualReleasedYear = processed.getMileage();
         assertThat(actualReleasedYear).isEqualTo(expectedMileage);
     }
 }

@@ -3,24 +3,28 @@ package com.devoo.motorbike.analyzer.domain;
 import com.devoo.motorbike.analyzer.constants.DocumentStatus;
 import com.devoo.motorbike.analyzer.domain.naver.TargetNaverItem;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.gson.JsonObject;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.jsoup.nodes.Document;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 @org.springframework.data.elasticsearch.annotations.Document(indexName = "result-item")
 public class NaverDocumentWrapper {
     @Id
     private String id;
-    private final TargetNaverItem targetNaverItem;
+    private TargetNaverItem targetNaverItem;
     @JsonIgnore
     private Document document;
     private DocumentStatus status;
-    private List<JsonObject> processedResults = new ArrayList<>();
+    @Field(type = FieldType.Object)
+    private List<Object> processedResults = new ArrayList<>();
 
     public NaverDocumentWrapper(Document document, TargetNaverItem targetNaverItem) {
         this.document = document;
@@ -28,7 +32,7 @@ public class NaverDocumentWrapper {
         this.id = targetNaverItem.getLink();
     }
 
-    public void addProcessedResult(JsonObject processedResult) {
+    public void addProcessedResult(ProcessResult processedResult) {
         processedResults.add(processedResult);
     }
 }

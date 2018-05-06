@@ -1,9 +1,9 @@
 package com.devoo.motorbike.analyzer.processor;
 
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
+import com.devoo.motorbike.analyzer.domain.ProcessResult;
 import com.devoo.motorbike.analyzer.processor.naver.BatumaSaleItemProcessor;
 import com.devoo.motorbike.analyzer.processor.naver.NaverCafeDocumentRefiner;
-import com.google.gson.JsonElement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,7 @@ import java.util.function.Function;
 @Slf4j
 public class NaverProcessors implements Function<NaverDocumentWrapper, NaverDocumentWrapper> {
     private final NaverCafeDocumentRefiner cafeDocumentRefiner;
-    private List<Processor<NaverDocumentWrapper, JsonElement>> processors = new LinkedList<>();
+    private List<Processor<NaverDocumentWrapper, ? extends ProcessResult>> processors = new LinkedList<>();
 
     @Autowired
     public NaverProcessors(NaverCafeDocumentRefiner cafeDocumentRefiner,
@@ -36,7 +36,7 @@ public class NaverProcessors implements Function<NaverDocumentWrapper, NaverDocu
         log.debug("Processing item...{}", naverDocumentWrapper.getDocument().baseUri());
         processors.forEach(processor -> {
             Optional.ofNullable(processor.execute(naverDocumentWrapper))
-                    .ifPresent(processedResult -> naverDocumentWrapper.addProcessedResult(processedResult.getAsJsonObject()));
+                    .ifPresent(processedResult -> naverDocumentWrapper.addProcessedResult(processedResult));
         });
         log.debug("Processed {}", naverDocumentWrapper.getTargetNaverItem().getLink());
         return naverDocumentWrapper;

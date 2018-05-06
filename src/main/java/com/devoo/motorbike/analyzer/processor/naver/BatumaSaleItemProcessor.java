@@ -2,12 +2,12 @@ package com.devoo.motorbike.analyzer.processor.naver;
 
 import com.devoo.motorbike.analyzer.domain.Model;
 import com.devoo.motorbike.analyzer.domain.NaverDocumentWrapper;
+import com.devoo.motorbike.analyzer.domain.ProcessResult;
 import com.devoo.motorbike.analyzer.processor.Processor;
 import com.devoo.motorbike.analyzer.processor.parser.ModelNameParser;
 import com.devoo.motorbike.analyzer.processor.parser.NumericValueParser;
 import com.devoo.motorbike.analyzer.processor.parser.YearParser;
 import com.devoo.motorbike.analyzer.service.ProductModelInfoService;
-import com.google.gson.JsonElement;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 
 @Component
 @Slf4j
-public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, JsonElement> {
+public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, BatumaSaleItemProcessor.BatumaSaleItem> {
     public static final String BATUMA_BASE_DOMAIN_URL = "http://cafe.naver.com/bikecargogo";
     private final Pattern modelInfoPattern = Pattern.compile(".*모델.*");
     private final Pattern RELEASED_YEAR_TEXT_PATTERN = Pattern.compile(".*연식.*");
@@ -39,7 +39,7 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
     }
 
     @Override
-    public JsonElement process(NaverDocumentWrapper param) {
+    public BatumaSaleItem process(NaverDocumentWrapper param) {
         BatumaSaleItem batumaSaleItem = new BatumaSaleItem();
         Document rawDocument = param.getDocument();
 
@@ -49,7 +49,7 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
         batumaSaleItem.setReleaseYear(extractReleasedYear(rawDocument));
         batumaSaleItem.setMileage(extractMileage(rawDocument));
         log.debug("Document is processed to parse to BatumaSaleItem. {}", param.getTargetNaverItem().getLink());
-        return gson.toJsonTree(batumaSaleItem);
+        return batumaSaleItem;
     }
 
     private Long extractMileage(Document rawDocument) {
@@ -117,7 +117,7 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
     }
 
     @Data
-    private class BatumaSaleItem {
+    public static class BatumaSaleItem extends ProcessResult {
         private final String ITEM_TYPE = "BATUMA_SALE_ITEM";
         private String model;
         private Integer displacement;

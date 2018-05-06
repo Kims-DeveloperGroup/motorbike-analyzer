@@ -18,12 +18,14 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import static com.devoo.motorbike.analyzer.processor.parser.ModelNameParser.UNDEFINED_MODEL;
+
 @Component
 @Slf4j
 public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, BatumaSaleItemProcessor.BatumaSaleItem> {
     public static final String BATUMA_BASE_DOMAIN_URL = "http://cafe.naver.com/bikecargogo";
-    private final Pattern modelInfoPattern = Pattern.compile(".*모델.*");
-    private final Pattern RELEASED_YEAR_TEXT_PATTERN = Pattern.compile(".*연식.*");
+    private final Pattern MODEL_TEXT_PATTERN = Pattern.compile(".+모델.+");
+    private final Pattern RELEASED_YEAR_TEXT_PATTERN = Pattern.compile(".+연식.+");
     private Pattern MILEAGE_TEXT_PATTERN = Pattern.compile(".+적산거리.+");
     private final YearParser yearParser;
     private final NumericValueParser numericValueParser;
@@ -58,15 +60,12 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
     }
 
     private Integer extractReleasedYear(Document rawDocument) {
-        Optional<Elements> releaseYear = Optional.ofNullable(rawDocument.getElementsMatchingOwnText(RELEASED_YEAR_TEXT_PATTERN));
-        if (releaseYear.isPresent()) {
-            String text = releaseYear.get().get(0).text();
-            Integer releasedYear = yearParser.parse(text);
-            if (releasedYear != null) {
-                return releasedYear;
-            }
+        String releaseYearInfoText = getFirstElementMatchingOwnTextFromDocument(rawDocument, RELEASED_YEAR_TEXT_PATTERN);
+
+        if (releaseYearInfoText.isEmpty()) {
+            return null;
         }
-        return null;
+        return yearParser.parse(releaseYearInfoText);
     }
 
     private Long extractPrice(Document rawDocument) {
@@ -90,23 +89,26 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
     }
 
     private String extractModel(Document rawDocument) {
-        Optional<Elements> model = Optional.ofNullable(rawDocument.getElementsMatchingOwnText(modelInfoPattern));
-        if (model.isPresent()) {
-            String parsedModelName = modelNameParser.parse(model.get().get(0).text());
-            Optional<Model> matchedModelByName = productModelInfoService.findMatchedModelByName(parsedModelName);
-            if (matchedModelByName.isPresent()) {
-                return matchedModelByName.get().getName();
-            } else {
-                return parsedModelName;
-            }
+        String modelInfoText = getFirstElementMatchingOwnTextFromDocument(rawDocument, MODEL_TEXT_PATTERN);
+        if (modelInfoText.isEmpty()) {
+            return null;
         }
-        return null;
+        String parsedModelName = modelNameParser.parse(modelInfoText);
+        if (parsedModelName.equals(UNDEFINED_MODEL)) {
+            return modelInfoText;
+        }
+        Optional<Model> matchedModelByName = productModelInfoService.findMatchedModelByName(parsedModelName);
+        if (matchedModelByName.isPresent()) {
+            return matchedModelByName.get().getName();
+        } else {
+            return parsedModelName;
+        }
     }
 
     private String getFirstElementMatchingOwnTextFromDocument(Document rawDocument, Pattern textPattern) {
         Elements elements = rawDocument.getElementsMatchingOwnText(textPattern);
         if (elements == null || elements.isEmpty()) {
-            return null;
+            return "";
         }
         return elements.get(0).text();
     }

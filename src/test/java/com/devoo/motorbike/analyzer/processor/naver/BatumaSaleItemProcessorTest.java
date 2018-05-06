@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.File;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import static com.devoo.motorbike.analyzer.processor.naver.BatumaSaleItemProcessor.BATUMA_BASE_DOMAIN_URL;
+import static com.devoo.motorbike.analyzer.processor.parser.ModelNameParser.UNDEFINED_MODEL;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -42,12 +44,28 @@ public class BatumaSaleItemProcessorTest {
     private BatumaSaleItemProcessor batumaSaleItemProcessor;
 
     private static Document sampleDoc;
+    private static Document nonOrganizedSampleDoc;
 
     @BeforeClass
     public static void readSampleHtmlDoc() throws IOException {
         String resource = NaverCafeDocumentRefinerTest.class.
                 getClassLoader().getResource("batumaSaleItemSample.html").getFile();
         sampleDoc = Jsoup.parse(new File(resource), "utf-8");
+        String resource2 = NaverCafeDocumentRefinerTest.class.
+                getClassLoader().getResource("batumaSaleItemNotOrganizedSample.html").getFile();
+        nonOrganizedSampleDoc = Jsoup.parse(new File(resource2), "utf-8");
+    }
+
+    @Test
+    public void shouldExtractingDataFromDocDoNothing_whenDataIsNotFoundInGivenDocument() {
+        // Given
+        TargetNaverItem naverItem = new TargetNaverItem();
+        naverItem.setLink(BATUMA_BASE_DOMAIN_URL);
+
+        NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(nonOrganizedSampleDoc, naverItem);
+
+        // When
+        batumaSaleItemProcessor.process(documentWrapper);
     }
 
     @Test
@@ -57,6 +75,7 @@ public class BatumaSaleItemProcessorTest {
         naverItem.setLink(BATUMA_BASE_DOMAIN_URL);
 
         NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(sampleDoc, naverItem);
+        when(modelNameParser.parse(anyString())).thenReturn(UNDEFINED_MODEL);
 
         //When
         BatumaSaleItemProcessor.BatumaSaleItem processed = batumaSaleItemProcessor.execute(documentWrapper);
@@ -73,6 +92,7 @@ public class BatumaSaleItemProcessorTest {
         naverItem.setLink(BATUMA_BASE_DOMAIN_URL);
 
         NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(sampleDoc, naverItem);
+        Mockito.when(modelNameParser.parse(anyString())).thenReturn(UNDEFINED_MODEL);
         //When
         BatumaSaleItemProcessor.BatumaSaleItem processed = batumaSaleItemProcessor.execute(documentWrapper);
 
@@ -106,7 +126,7 @@ public class BatumaSaleItemProcessorTest {
         NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(sampleDoc, naverItem);
         int expectedReleaseYear = 2010;
         when(yearParser.parse(anyString())).thenReturn(expectedReleaseYear);
-
+        when(modelNameParser.parse(anyString())).thenReturn(UNDEFINED_MODEL);
         //When
         BatumaSaleItemProcessor.BatumaSaleItem processed = batumaSaleItemProcessor.execute(documentWrapper);
 
@@ -123,7 +143,7 @@ public class BatumaSaleItemProcessorTest {
         NaverDocumentWrapper documentWrapper = new NaverDocumentWrapper(sampleDoc, naverItem);
         long expectedMileage = 7486;
         when(numericValueParser.parse(anyString())).thenReturn(expectedMileage);
-
+        when(modelNameParser.parse(anyString())).thenReturn(UNDEFINED_MODEL);
         //When
         BatumaSaleItemProcessor.BatumaSaleItem processed = batumaSaleItemProcessor.execute(documentWrapper);
 

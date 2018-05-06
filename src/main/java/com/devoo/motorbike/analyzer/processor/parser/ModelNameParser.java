@@ -10,11 +10,13 @@ import java.util.regex.Pattern;
 
 @Component
 public class ModelNameParser implements Parser<String> {
-    private static final Pattern modelNamePattern1_GSX_R_600 = Pattern.compile("([A-z]+.[A-z]+.[0-9]+)");
-    private static final Pattern modelNamePattern2_CBR_600_RR = Pattern.compile("([A-z]+.[0-9]+.[A-z]+)");
-    private static final Pattern modelNamePattern3_600_RR = Pattern.compile("([0-9]+.[A-z]+)");
-    private static final Pattern[] modelNamePatterns = {modelNamePattern1_GSX_R_600, modelNamePattern2_CBR_600_RR, modelNamePattern3_600_RR};
-    private final String UNDEFINED_MODEL = "UNDEFINED";
+    private static final Pattern modelNamePattern1_GSX_R_600 = Pattern.compile("([A-z]+.?[A-z]+.?[0-9]+)");
+    private static final Pattern modelNamePattern2_CBR_600_RR = Pattern.compile("([A-z]+.?[0-9]+.?[A-z]+)");
+    private static final Pattern modelNamePattern3_600_RR = Pattern.compile("([0-9]+.?[A-z]+)");
+    private static final Pattern modelNamePattern4_R_600 = Pattern.compile("([A-z]+.?[0-9]+)");
+    private static final Pattern[] modelNamePatterns = {modelNamePattern1_GSX_R_600, modelNamePattern2_CBR_600_RR,
+            modelNamePattern3_600_RR, modelNamePattern4_R_600};
+    public static final String UNDEFINED_MODEL = "UNDEFINED";
 
     @Override
     public String parse(String text) {

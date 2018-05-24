@@ -35,6 +35,7 @@ public class NaverCafeItemCrawler {
 
     @Value("${naver.password}")
     private String password;
+    private final long DELAYING_TIME_IN_MILLS = 1000L;
 
     public NaverCafeItemCrawler() {
         this.parallel = 1;
@@ -46,7 +47,7 @@ public class NaverCafeItemCrawler {
     public Stream<NaverDocumentWrapper> getDocuments(BlockingQueue<TargetNaverItem> inputQueue) throws InterruptedException {
         ParallelNaverClient<TargetNaverItem, NaverDocumentWrapper> parallelNaverClient = new ParallelNaverClient<>(this.parallel);
         parallelNaverClient.tryToLogin(this.userId, this.password);
-        return parallelNaverClient.startAsynchronously(new NaverItemCrawlingAction(), inputQueue);
+        return parallelNaverClient.startAsynchronously(new NaverItemCrawlingAction(DELAYING_TIME_IN_MILLS), inputQueue);
     }
 
     public void setParallel(int parallel) {
@@ -54,12 +55,18 @@ public class NaverCafeItemCrawler {
     }
 
     public static class NaverItemCrawlingAction implements ClientAction<TargetNaverItem, NaverDocumentWrapper> {
+        private final long delayingTimeInMills;
+
+        public NaverItemCrawlingAction(long delayingTimeInMills) {
+            this.delayingTimeInMills = delayingTimeInMills;
+        }
 
         @Override
         public NaverDocumentWrapper apply(TargetNaverItem item, NaverClient client) {
             NaverDocumentWrapper naverDocumentWrapper;
             String url = item.getLink();
             try {
+                Thread.sleep(delayingTimeInMills);
                 Document document = client.getIframe(url, CAFE_CONTENT_IFRAME_NAME);
                 naverDocumentWrapper = new NaverDocumentWrapper(document, item);
                 naverDocumentWrapper.setStatus(NORMAL);
@@ -72,10 +79,15 @@ public class NaverCafeItemCrawler {
                 if (exceptionMessage.contains(DELETED_POST_ALERT_MESSAGE)) {
                     naverDocumentWrapper.setStatus(DELETED);
                     log.debug("Naver item is deleted: {}", url);
+                } else {
+                    naverDocumentWrapper.setStatus(DocumentStatus.EXCEPTIONAL);
                 }
             } catch (WebDriverException e) {
                 naverDocumentWrapper = new NaverDocumentWrapper(null, item);
                 naverDocumentWrapper.setStatus(DocumentStatus.EXCEPTIONAL);
+            } catch (InterruptedException e) {
+                log.error("Unexpectedly working thread is interrupted while crawling {}", url);
+                return null;
             }
             return naverDocumentWrapper;
         }

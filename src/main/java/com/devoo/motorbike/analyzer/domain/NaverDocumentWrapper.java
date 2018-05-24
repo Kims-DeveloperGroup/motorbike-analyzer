@@ -22,8 +22,9 @@ public class NaverDocumentWrapper {
     private TargetNaverItem targetNaverItem;
     @JsonIgnore
     private Document document;
+    private String documentText;
     private DocumentStatus status;
-    @Field(type = FieldType.Object)
+    @Field(type = FieldType.Auto)
     private List<Object> processedResults = new ArrayList<>();
 
     public NaverDocumentWrapper(Document document, TargetNaverItem targetNaverItem) {
@@ -34,5 +35,9 @@ public class NaverDocumentWrapper {
 
     public void addProcessedResult(ProcessResult processedResult) {
         processedResults.add(processedResult);
+    }
+
+    public void convertDocumentToText() {
+        documentText = document.toString();
     }
 }

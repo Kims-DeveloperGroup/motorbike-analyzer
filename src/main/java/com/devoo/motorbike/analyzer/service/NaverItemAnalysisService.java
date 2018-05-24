@@ -39,7 +39,7 @@ public class NaverItemAnalysisService {
         this.targetItemRepository = targetItemRepository;
         this.resultItemRepository = resultItemRepository;
         this.naverCafeItemCrawler = naverCafeItemCrawler;
-        this.naverCafeItemCrawler.setParallel(3);
+        this.naverCafeItemCrawler.setParallel(2);
         this.naverProcessors = naverProcessors;
     }
 
@@ -49,7 +49,15 @@ public class NaverItemAnalysisService {
         naverItemAnalysisService.startAnalysis();
     }
 
+    private void deleteProcessedTargetItems() {
+        resultItemRepository.findAll().forEach(item -> {
+            targetItemRepository.deleteById(item.getId());
+            log.debug("delete target item: {} from repository", item.getId());
+        });
+    }
+
     public void startAnalysis() throws InterruptedException {
+        deleteProcessedTargetItems();
         BlockingQueue<TargetNaverItem> inputQueue = targetNaverItemPublisher.publishNaverItems();
 
         AtomicInteger count = new AtomicInteger(0);
@@ -69,5 +77,6 @@ public class NaverItemAnalysisService {
                     resultItemRepository.save(resultItem);
                     log.debug("{}: saved analyzed item {}", count.incrementAndGet(), resultItem.getTargetNaverItem().getLink());
                 });
+        log.info("{} ends", this.getClass().getSimpleName());
     }
 }

@@ -70,7 +70,7 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
 
     private Long extractPrice(Document rawDocument) {
         Optional<Elements> price = Optional.ofNullable(rawDocument.select(".cost"));
-        if (price.isPresent()) {
+        if (price.isPresent() && price.get().size() > 0) {
             String text = price.get().get(0).text();
             return numericValueParser.parse(text);
         }
@@ -79,9 +79,10 @@ public class BatumaSaleItemProcessor implements Processor<NaverDocumentWrapper, 
 
     private SaleStatus extractSaleStatus(Document rawDocument) {
         Optional<Elements> onSaleFlag = Optional.ofNullable(rawDocument.select(".details .sale_now"));
-        if (onSaleFlag.isPresent()) {
+        Optional<Elements> onClosedSale = Optional.of(rawDocument.select(".details .sale_complete"));
+        if (onSaleFlag.isPresent() && onSaleFlag.get().size() > 0) {
             return SaleStatus.ON_SALE;
-        } else if (Optional.of(rawDocument.select(".details .sale_complete")).isPresent()) {
+        } else if (onClosedSale.isPresent() && onClosedSale.get().size() > 0) {
             return SaleStatus.SOLD;
         } else {
             return SaleStatus.UNDEFINED;

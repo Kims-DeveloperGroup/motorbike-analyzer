@@ -35,7 +35,7 @@ public class NaverCafeItemCrawlerTest {
         doNothing().when(naverClient).closeAlert();
 
         //When
-        NaverCafeItemCrawler.NaverItemCrawlingAction naverItemCrawlingAction = new NaverCafeItemCrawler.NaverItemCrawlingAction();
+        NaverCafeItemCrawler.NaverItemCrawlingAction naverItemCrawlingAction = new NaverCafeItemCrawler.NaverItemCrawlingAction(0L);
         NaverDocumentWrapper naverDocumentWrapper = naverItemCrawlingAction.apply(targetNaverItem, naverClient);
         DocumentStatus documentStatus = naverDocumentWrapper.getStatus();
 

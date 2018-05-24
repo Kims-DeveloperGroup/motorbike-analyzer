@@ -29,14 +29,20 @@ public class NaverProcessors implements Function<NaverDocumentWrapper, NaverDocu
     @Override
     public NaverDocumentWrapper apply(NaverDocumentWrapper naverDocumentWrapper) {
         naverDocumentWrapper = cafeDocumentRefiner.execute(naverDocumentWrapper);
+        naverDocumentWrapper.convertDocumentToText();
         return executeProcessors(naverDocumentWrapper);
     }
 
     public NaverDocumentWrapper executeProcessors(NaverDocumentWrapper naverDocumentWrapper) {
         log.debug("Processing item...{}", naverDocumentWrapper.getDocument().baseUri());
         processors.forEach(processor -> {
-            Optional.ofNullable(processor.execute(naverDocumentWrapper))
-                    .ifPresent(processedResult -> naverDocumentWrapper.addProcessedResult(processedResult));
+            try {
+                Optional.ofNullable(processor.execute(naverDocumentWrapper))
+                        .ifPresent(processedResult -> naverDocumentWrapper.addProcessedResult(processedResult));
+            } catch (Exception e) {
+                log.error("Exception occurred while executing a processor for {}",
+                        naverDocumentWrapper.getTargetNaverItem().getLink(), e);
+            }
         });
         log.debug("Processed {}", naverDocumentWrapper.getTargetNaverItem().getLink());
         return naverDocumentWrapper;
